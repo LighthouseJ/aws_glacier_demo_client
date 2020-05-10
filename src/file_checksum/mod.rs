@@ -1,8 +1,12 @@
 
-mod file_checksum {
+pub mod file_checksum {
+
+    use log::trace;
+    use log::error;
+
     use sha2::{Sha256, Digest};
     use std::io::Read;
-    use std::fmt::Formatter;
+    // use std::fmt::Formatter;
     use data_encoding::HEXUPPER;
 
     pub struct Sha256Checksum
@@ -20,13 +24,13 @@ mod file_checksum {
             {
                 Ok(d) => {
                     if d == 0 {
-                        println!("Finished reading file");
+                        trace!("Finished reading file");
                         break;
                     }
                     ctx.input(&buffer[..d]);
                 },
                 Err(e) => {
-                    println!("Failed: {}", e);
+                    error!("Failed: {}", e);
                     return Err(e.to_string());
                 }
             }
@@ -34,7 +38,7 @@ mod file_checksum {
 
         let sha256_result = ctx.result();
 
-        println!("have {} bytes", sha256_result.len());
+        trace!("hash {} bytes", sha256_result.len());
         let exported= sha256_result.as_slice();
 
         let mut result_array: [u8; 32] = [0; 32];

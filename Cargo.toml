@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 log = "0.4.8"
+simple_logger = "1.6.0"
 clap = "2.33.0"
 data-encoding = "2.2.0"
 sha2 = "0.8.1"
