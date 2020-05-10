@@ -46,4 +46,6 @@ fn main() {
     info!("sha-256: {}", digest);
 
     // aws_client::send_file(input);
+    aws_client::aws_client::send_file(matches.value_of("aws account id").unwrap(),
+        &input);
 }

@@ -19,6 +19,8 @@ pub mod file_checksum {
         let mut ctx = Sha256::new();
         let mut buffer = [0; 1024];
 
+        info!("Reading file...");
+
         loop {
             match reader.read(&mut buffer)
             {

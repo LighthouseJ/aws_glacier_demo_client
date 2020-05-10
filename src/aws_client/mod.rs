@@ -5,12 +5,20 @@
 // use rusoto_core::{Region, RusotoError};
 // use rusoto_glacier::{GlacierClient, Glacier, InitiateMultipartUploadOutput, InitiateMultipartUploadError};
 
+#[derive(Debug)]
+struct ByteRange
+{
+    start: usize,
+    end: usize
+}
 
-mod aws_client
+
+pub mod aws_client
 {
 
     use log::info;
-    use rusoto_glacier::Glacier;
+    use rusoto_glacier::{Glacier, InitiateMultipartUploadInput, UploadMultipartPartInput};
+    use crate::aws_client::ByteRange;
 
     pub fn send_file(account_id: &str, file: &std::fs::File) -> Result<(), &'static str>
     {
@@ -36,11 +44,25 @@ mod aws_client
 
         let num_parts = input_file_metadata.len() / part_size;
         let num_remainder = input_file_metadata.len() % part_size;
-        info!("Have {} parts, {} remainder", num_parts, num_remainder);
+        info!("File size={}, have {} parts, {} remainder", input_file_metadata.len(),
+              num_parts, num_remainder);
 
         // glacier_client.initiate_multipart_upload(multipart_upload);
 
-        Err("junk!")
+        // glacier_client.initiate_multipart_upload()
+        let mut upload_parts: Vec<ByteRange> = Vec::new();
+        // upload_parts.push(ByteRange{start: 0, end: num_remainder as usize });
+        let mut next_start_pos: usize = 0;
+        for x in 0 .. num_parts {
+            let this_end_pos: usize = (part_size * (x + 1)) as usize;
+            upload_parts.push(ByteRange{start: next_start_pos, end: this_end_pos});
+            next_start_pos = this_end_pos + 1;
+        }
+        upload_parts.push(ByteRange{ start: next_start_pos, end: num_remainder as usize});
+
+        info!("parts to send are: {:?}", upload_parts);
+
+        unimplemented!("not finished!");
     }
 }
 
