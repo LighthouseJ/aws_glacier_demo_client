@@ -9,6 +9,7 @@ mod aws_client;
 use log::info;
 use clap::{Arg, App};
 use std::fs::File;
+use crate::aws_client::{AwsCredentials, UploadInfo};
 
 
 fn main() {
@@ -45,7 +46,19 @@ fn main() {
 
     info!("sha-256: {}", digest);
 
-    // aws_client::send_file(input);
-    aws_client::aws_client::send_file(matches.value_of("aws account id").unwrap(),
-        &input);
+    // done
+    let aws_info = AwsCredentials
+    {
+        account_id: matches.value_of("aws account id").unwrap().to_string()
+    };
+
+    let upload_info = UploadInfo{
+        archive_description: "fill me in!".to_string(),
+        // upload_size: 0,
+        vault_name: String::from("testvault"),
+    };
+
+    let part_size: u64 = 64 * 1024 * 1024;
+
+    aws_client::aws_client::send_file(&aws_info, &upload_info, &input, part_size);
 }
