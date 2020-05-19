@@ -34,8 +34,8 @@ jobs:
 
     - name: rust-rustfmt-check
       uses: mbrobbel/rustfmt-check@0.2.0
-      with:
+      #with:
         # GitHub token
-        token: 62b22e3640ae0f8a603abfad016b1547cebd28a5
+        #token: 62b22e3640ae0f8a603abfad016b1547cebd28a5
         # Arguments for cargo. Not for rustfmt options.
         #args: # optional
