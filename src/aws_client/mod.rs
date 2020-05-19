@@ -1,4 +1,3 @@
-
 #[derive(Debug)]
 struct SimpleByteRange
 {
@@ -14,7 +13,7 @@ pub struct AwsCredentials
 pub struct UploadInfo
 {
     pub archive_description: String,
-    // upload_size: u64,
+    // upload_size: u32,
     pub vault_name: String
 }
 
@@ -22,8 +21,9 @@ pub mod aws_client
 {
 
     use log::info;
-    use rusoto_glacier::{Glacier};
-    use crate::aws_client::{SimpleByteRange, AwsCredentials, UploadInfo};
+    use std::convert::From;
+    use rusoto_glacier::{Glacier, InitiateMultipartUploadInput, UploadMultipartPartInput, InitiateMultipartUploadOutput, InitiateMultipartUploadError, AbortMultipartUploadInput};
+    use crate::aws_client::{ByteRange, AwsCredentials, UploadInfo};
     // use futures::executor::block_on;
     use tokio::runtime::Runtime;
     // use crate::file_checksum::file_checksum::get_sha256_digest_partial;

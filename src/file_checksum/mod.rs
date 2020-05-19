@@ -6,6 +6,7 @@ pub mod file_checksum {
 
     use sha2::{Sha256, Digest};
     use std::io::Read;
+    // use std::fmt::Formatter;
     use data_encoding::HEXUPPER;
 
     pub struct Sha256Checksum
