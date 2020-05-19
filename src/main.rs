@@ -41,8 +41,7 @@ fn main() {
 
     let mut input = File::open(file).unwrap();
 
-    // let digest = lib::get_sha256_digest(input).unwrap();
-    let digest = file_checksum::file_checksum::get_sha256_digest(&input).unwrap();
+    let digest = file_checksum::file_checksum::get_sha256_digest_full(&input).unwrap();
 
     info!("sha-256: {}", digest);
 
