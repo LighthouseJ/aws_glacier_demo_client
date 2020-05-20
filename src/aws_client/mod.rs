@@ -10,22 +10,15 @@ pub struct AwsCredentials {
 
 pub struct UploadInfo {
     pub archive_description: String,
-    // upload_size: u32,
     pub vault_name: String,
 }
 
 pub mod aws_client {
 
-    use crate::aws_client::{AwsCredentials, ByteRange, UploadInfo};
+    use crate::aws_client::{AwsCredentials, UploadInfo, SimpleByteRange};
     use log::info;
-    use rusoto_glacier::{
-        AbortMultipartUploadInput, Glacier, InitiateMultipartUploadError,
-        InitiateMultipartUploadInput, InitiateMultipartUploadOutput, UploadMultipartPartInput,
-    };
-    use std::convert::From;
-    // use futures::executor::block_on;
+    use rusoto_glacier::{AbortMultipartUploadInput, Glacier};
     use tokio::runtime::Runtime;
-    // use crate::file_checksum::file_checksum::get_sha256_digest_partial;
 
     fn calculate_file_parts(file: &std::fs::File, part_size: u64) -> Vec<SimpleByteRange> {
         info!("Using part_size={}", part_size);
@@ -109,46 +102,19 @@ pub mod aws_client {
 
         info!("upload id={:?}", initiate_res.upload_id);
 
-        /*let complete_upload = rusoto_glacier::CompleteMultipartUploadInput
-        {
+
+        // abort or complete now
+        match glacier_client.abort_multipart_upload(AbortMultipartUploadInput{
             account_id: aws_info.account_id.clone(),
-            archive_size: None,
-            checksum: None,
-            upload_id: "".to_string(),
-            vault_name: "".to_string()
+            upload_id: initiate_res.upload_id.unwrap(),
+            vault_name: upload_info.vault_name.clone()
+            })
+            .await
+        {
+            Ok(_) => Ok(()),
+            Err(_) => Err("Failed to abort!"),
         }
-
-        let finish_upload =
-            glacier_client.complete_multipart_upload(complete_upload).await; */
-
-        unimplemented!("not finished!");
     }
 
-    // async fn go(vault_name: &str, aws_info: &AwsCredentials, upload_info: &UploadInfo) -> Result<(), String>
-    // {
 
-    //     match initiate_res {
-    //         Ok(r) => {
-    //             info!("Ready to start, location={:?}, upload id={:?}", r.location, r.upload_id);
-
-    //             glacier_client.abort_multipart_upload(AbortMultipartUploadInput{
-    //                 vault_name: upload_info.vault_name.clone(),
-    //                 account_id: aws_info.account_id.clone(),
-    //                 upload_id: r.upload_id.unwrap()
-    //             });
-    //             Ok(())
-    //         },
-    //         Err(e) => {
-    //             /*glacier_client.abort_multipart_upload(AbortMultipartUploadInput{
-    //                 vault_name: upload_info.vault_name.clone(),
-    //                 account_id: aws_info.account_id.clone(),
-    //                 upload_id: e.
-    //             })*/
-    //             Err(e.to_string())
-    //         },
-    //     }
-
-    //     // upload now
-
-    // }
 }
