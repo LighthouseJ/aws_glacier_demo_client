@@ -15,10 +15,14 @@ pub struct UploadInfo {
 
 pub mod aws_client {
 
+    use std::cmp;
     use crate::aws_client::{AwsCredentials, UploadInfo, SimpleByteRange};
     use log::info;
     use rusoto_glacier::{AbortMultipartUploadInput, Glacier};
     use tokio::runtime::Runtime;
+    // use tokio::time::delay_for;
+    use std::time::Duration;
+    use futures::io::Error;
 
     fn calculate_file_parts(file: &std::fs::File, part_size: u64) -> Vec<SimpleByteRange> {
         info!("Using part_size={}", part_size);
@@ -67,13 +71,37 @@ pub mod aws_client {
         file: &std::fs::File,
         part_size: u64,
     ) -> Result<(), &'static str> {
-        let this_upload_parts = calculate_file_parts(file, part_size);
+        let this_upload_ranges = calculate_file_parts(file, part_size);
+        let thread_count = cmp::max(4, this_upload_ranges.len());
+        info!("thread count={}", thread_count);
 
-        let future_result = upload_parts(aws_info, upload_info, part_size, &this_upload_parts);
+        let future_result = upload_parts(aws_info, upload_info, part_size, &this_upload_ranges);
 
-        Runtime::new()
-            .expect("Failed to create tokio runtime")
-            .block_on(future_result)
+        /*let threaded_rt = tokio::runtime::Builder::new()
+            // .threaded_scheduler()
+            .core_threads(thread_count)
+            .on_thread_start(|| {
+                println!("thread starting");
+            })
+            .on_thread_stop(|| {
+                println!("thread stopping");
+            })
+            .build();*/
+        let threaded_rt = Runtime::new();
+
+        match threaded_rt
+        {
+            Ok(mut runtime) => runtime.block_on(future_result),
+
+            Err(_) => Err("failed to allocate runtime")
+        }
+
+    }
+
+    async fn send_segment(range: &SimpleByteRange) -> ()
+    {
+        info!("sending segment: {:?}", range);
+
     }
 
     async fn upload_parts(
@@ -101,6 +129,11 @@ pub mod aws_client {
             .unwrap();
 
         info!("upload id={:?}", initiate_res.upload_id);
+
+
+        // parts.iter().for_each(|r| tokio::spawn( async move { send_segment(r)}));
+
+
 
 
         // abort or complete now

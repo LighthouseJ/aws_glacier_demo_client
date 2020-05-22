@@ -64,5 +64,5 @@ fn main() {
 
     let part_size: u64 = 64 * 1024 * 1024;
 
-    aws_client::aws_client::send_file(&aws_info, &upload_info, &input, part_size).unwrap_err();
+    aws_client::aws_client::send_file(&aws_info, &upload_info, &input, part_size);
 }
