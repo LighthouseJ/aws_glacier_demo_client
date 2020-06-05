@@ -18,3 +18,4 @@ rusoto_core = "0.43.0"
 rusoto_glacier = "0.43.0"
 tokio = { version = "0.2.21", features = ["full"] }
 futures = "0.3.5"
+futures-preview = "0.3.0-alpha.19"

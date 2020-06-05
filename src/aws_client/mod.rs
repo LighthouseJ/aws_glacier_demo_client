@@ -18,11 +18,12 @@ pub mod aws_client {
     use std::cmp;
     use crate::aws_client::{AwsCredentials, UploadInfo, SimpleByteRange};
     use log::info;
-    use rusoto_glacier::{AbortMultipartUploadInput, Glacier};
+    use rusoto_glacier::{AbortMultipartUploadInput, Glacier, UploadMultipartPartInput};
     use tokio::runtime::Runtime;
-    // use tokio::time::delay_for;
     use std::time::Duration;
     use futures::io::Error;
+    use futures::stream::{self, StreamExt};
+    use std::fs::OpenOptions;
 
     fn calculate_file_parts(file: &std::fs::File, part_size: u64) -> Vec<SimpleByteRange> {
         info!("Using part_size={}", part_size);
@@ -98,9 +99,26 @@ pub mod aws_client {
 
     }
 
-    async fn send_segment(range: &SimpleByteRange) -> ()
+    async fn make_upload_segment(file: &std::fs::File, r: &SimpleByteRange) -> Result<UploadMultipartPartInput, Error>
+    {
+        let format_string = String::new();
+
+        Ok(UploadMultipartPartInput {
+            // format:   bytes 0-4194303/*
+            account_id: "".to_string(),
+            body: None,
+            checksum: None,
+            range: Some(format_string),
+            upload_id: "".to_string(),
+            vault_name: "".to_string()
+        })
+    }
+
+    async fn send_segment(range: &SimpleByteRange) -> Result<(), Error>
     {
         info!("sending segment: {:?}", range);
+
+        Ok(())
 
     }
 
@@ -130,11 +148,21 @@ pub mod aws_client {
 
         info!("upload id={:?}", initiate_res.upload_id);
 
-
         // parts.iter().for_each(|r| tokio::spawn( async move { send_segment(r)}));
+        let fut = stream::iter(for x in parts {
+            calculate_file_parts(fi)
+        })
+            .for_each_concurrent(
+                2,
+                |rx| async move {
+                    // println!("process={:?}", rx);
+                    send_segment(rx).await.unwrap();
+                }
+            );
 
+        fut.
 
-
+        // fut
 
         // abort or complete now
         match glacier_client.abort_multipart_upload(AbortMultipartUploadInput{
