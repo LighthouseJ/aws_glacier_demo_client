@@ -15,15 +15,15 @@ pub struct UploadInfo {
 
 pub mod aws_client {
 
-    use std::cmp;
-    use crate::aws_client::{AwsCredentials, UploadInfo, SimpleByteRange};
-    use log::info;
-    use rusoto_glacier::{AbortMultipartUploadInput, Glacier, UploadMultipartPartInput};
-    use tokio::runtime::Runtime;
-    use std::time::Duration;
+    use crate::aws_client::{AwsCredentials, SimpleByteRange, UploadInfo};
     use futures::io::Error;
     use futures::stream::{self, StreamExt};
+    use log::info;
+    use rusoto_glacier::{AbortMultipartUploadInput, Glacier, UploadMultipartPartInput};
+    use std::cmp;
     use std::fs::OpenOptions;
+    use std::time::Duration;
+    use tokio::runtime::Runtime;
 
     fn calculate_file_parts(file: &std::fs::File, part_size: u64) -> Vec<SimpleByteRange> {
         info!("Using part_size={}", part_size);
@@ -79,28 +79,28 @@ pub mod aws_client {
         let future_result = upload_parts(aws_info, upload_info, part_size, &this_upload_ranges);
 
         /*let threaded_rt = tokio::runtime::Builder::new()
-            // .threaded_scheduler()
-            .core_threads(thread_count)
-            .on_thread_start(|| {
-                println!("thread starting");
-            })
-            .on_thread_stop(|| {
-                println!("thread stopping");
-            })
-            .build();*/
+        // .threaded_scheduler()
+        .core_threads(thread_count)
+        .on_thread_start(|| {
+            println!("thread starting");
+        })
+        .on_thread_stop(|| {
+            println!("thread stopping");
+        })
+        .build();*/
         let threaded_rt = Runtime::new();
 
-        match threaded_rt
-        {
+        match threaded_rt {
             Ok(mut runtime) => runtime.block_on(future_result),
 
-            Err(_) => Err("failed to allocate runtime")
+            Err(_) => Err("failed to allocate runtime"),
         }
-
     }
 
-    async fn make_upload_segment(file: &std::fs::File, r: &SimpleByteRange) -> Result<UploadMultipartPartInput, Error>
-    {
+    async fn make_upload_segment(
+        file: &std::fs::File,
+        r: &SimpleByteRange,
+    ) -> Result<UploadMultipartPartInput, Error> {
         let format_string = String::new();
 
         Ok(UploadMultipartPartInput {
@@ -110,16 +110,14 @@ pub mod aws_client {
             checksum: None,
             range: Some(format_string),
             upload_id: "".to_string(),
-            vault_name: "".to_string()
+            vault_name: "".to_string(),
         })
     }
 
-    async fn send_segment(range: &SimpleByteRange) -> Result<(), Error>
-    {
+    async fn send_segment(range: &SimpleByteRange) -> Result<(), Error> {
         info!("sending segment: {:?}", range);
 
         Ok(())
-
     }
 
     async fn upload_parts(
@@ -152,19 +150,17 @@ pub mod aws_client {
         let fut = stream::iter(for x in parts {
             calculate_file_parts(fi)
         })
-            .for_each_concurrent(
-                2,
-                |rx| async move {
-                    // println!("process={:?}", rx);
-                    send_segment(rx).await.unwrap();
-                }
-            );
+        .for_each_concurrent(2, |rx| async move {
+            // println!("process={:?}", rx);
+            send_segment(rx).await.unwrap();
+        });
 
         // abort or complete now
-        match glacier_client.abort_multipart_upload(AbortMultipartUploadInput{
-            account_id: aws_info.account_id.clone(),
-            upload_id: initiate_res.upload_id.unwrap(),
-            vault_name: upload_info.vault_name.clone()
+        match glacier_client
+            .abort_multipart_upload(AbortMultipartUploadInput {
+                account_id: aws_info.account_id.clone(),
+                upload_id: initiate_res.upload_id.unwrap(),
+                vault_name: upload_info.vault_name.clone(),
             })
             .await
         {
@@ -172,6 +168,4 @@ pub mod aws_client {
             Err(_) => Err("Failed to abort!"),
         }
     }
-
-
 }

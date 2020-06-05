@@ -3,8 +3,8 @@ pub mod file_checksum {
     use log::error;
     use log::trace;
 
-    use sha2::{Digest, Sha256};
     use data_encoding::HEXUPPER;
+    use sha2::{Digest, Sha256};
 
     pub struct Sha256Checksum {
         checksum: [u8; 32],
