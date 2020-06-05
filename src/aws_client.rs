@@ -160,10 +160,6 @@ pub mod aws_client {
                 }
             );
 
-        fut.
-
-        // fut
-
         // abort or complete now
         match glacier_client.abort_multipart_upload(AbortMultipartUploadInput{
             account_id: aws_info.account_id.clone(),
